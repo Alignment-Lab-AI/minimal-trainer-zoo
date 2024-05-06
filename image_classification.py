@@ -51,7 +51,7 @@ class BasicNet(nn.Module):
         x = self.fc2(x)
         logits = self.softmax(x)
         if labels is not None:
-            # this will make your AI compatible with the trainer API
+            # this will make your model compatible with the trainer API
             loss = self.criterion(logits, labels)
             return {"loss": loss, "logits": logits}
         return logits
