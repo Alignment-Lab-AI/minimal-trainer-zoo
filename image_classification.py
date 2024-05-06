@@ -12,20 +12,20 @@ from transformers import Trainer, TrainingArguments
 
 # Constants
 accuracy = evaluate.load("accuracy")
-dataset = load_dataset("mnist")
-
-# Processing the dataset
-dataset = dataset.cast_column("image", Image(mode="RGB"))
 transform = transforms.Compose([transforms.ToTensor()])
 
+# Load and process the dataset
+dataset = load_dataset("mnist")
+dataset = dataset.cast_column("image", Image())
 
-def to_pt(batch):
+# Change data type from Pillow to PyTorch tensors
+def to_torch_tensors(batch):
+    # We will create a new column called "pixel_values" storing the data after applying our transformation
     batch["pixel_values"] = [transform(image.convert("RGB")) for image in batch["image"]]
     return batch
 
-
-train = dataset["train"].with_transform(to_pt)
-test = dataset["test"].with_transform(to_pt)
+train = dataset["train"].with_transform(to_torch_tensors)
+test = dataset["test"].with_transform(to_torch_tensors)
 
 
 # Creating the model
@@ -69,6 +69,7 @@ def compute_metrics(eval_pred):
 
 
 # Create a data collator
+# For each batch we will apply the following function to the data
 def collate_fn(examples):
     images = []
     labels = []
@@ -83,16 +84,16 @@ def collate_fn(examples):
 
 # Setup the training arguments
 training_args = TrainingArguments(
-    output_dir="my_awesome_mnist_model",
-    remove_unused_columns=False,
-    evaluation_strategy="steps",
-    save_strategy="epoch",
-    learning_rate=5e-4,
-    per_device_train_batch_size=64,
-    per_device_eval_batch_size=64,
-    num_train_epochs=2,
-    logging_steps=100,
-    push_to_hub=True,
+    output_dir="my_awesome_mnist_model",  # Where weights are stored
+    remove_unused_columns=False,  # Whether or not to automatically remove the columns unused by the model forward method.
+    evaluation_strategy="steps",  # How often metrics on the evaluation dataset should be computed
+    save_strategy="epoch",  # When to try and save the best model (such as a step number or every iteration)
+    learning_rate=5e-4,  # The learning rate during training
+    per_device_train_batch_size=64,  # Number of samples per batch during training
+    per_device_eval_batch_size=64,  # Number of samples per batch during evaluation
+    num_train_epochs=2,  # How many iterations through the dataset should be done
+    logging_steps=100,  # Number of update steps between two logs
+    push_to_hub=True,  # Whether or not to push the model to the Hub every time the model is saved
 )
 
 # configure the trainer
