@@ -18,11 +18,13 @@ transform = transforms.Compose([transforms.ToTensor()])
 dataset = load_dataset("mnist")
 dataset = dataset.cast_column("image", Image())
 
+
 # Change data type from Pillow to PyTorch tensors
 def to_torch_tensors(batch):
     # We will create a new column called "pixel_values" storing the data after applying our transformation
     batch["pixel_values"] = [transform(image.convert("RGB")) for image in batch["image"]]
     return batch
+
 
 train = dataset["train"].with_transform(to_torch_tensors)
 test = dataset["test"].with_transform(to_torch_tensors)
@@ -96,7 +98,7 @@ training_args = TrainingArguments(
     push_to_hub=True,  # Whether or not to push the model to the Hub every time the model is saved
 )
 
-# configure the trainer
+# Configure the trainer
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -105,5 +107,5 @@ trainer = Trainer(
     eval_dataset=test,
     compute_metrics=compute_metrics,
 )
-# train the model
+# Train the model
 trainer.train()
